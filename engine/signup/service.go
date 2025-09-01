@@ -2,7 +2,7 @@ package signup
 
 import (
 	"context"
-	"cqrs-travian/world/domain/commands"
+	"cqrs-travian/engine/domain/commands"
 	"github.com/google/uuid"
 	cqrs "github.com/terraskye/eventsourcing"
 )

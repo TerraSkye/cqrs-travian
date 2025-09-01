@@ -2,7 +2,8 @@ package world_listing
 
 import (
 	"context"
-	"cqrs-travian/world/events"
+	"cqrs-travian/engine/events"
+
 	"github.com/google/uuid"
 	cqrs "github.com/terraskye/eventsourcing"
 )
@@ -16,12 +17,10 @@ type Query struct {
 func (q Query) ID() []byte { return nil }
 
 type ReadModel struct {
-	Version string
-	Items   map[uuid.UUID]*WorldListing
+	Items map[uuid.UUID]*WorldListing
 }
 
-func (p *ReadModel) OnWorldCreated(ctx context.Context, ev *events.WorldCreatedEvent) {
-	p.Version = cqrs.MustExtractAggregateVersion(ctx)
+func (p *ReadModel) OnWorldCreated(_ context.Context, ev *events.WorldCreatedEvent) {
 	p.Items[ev.WorldID] = &WorldListing{
 		ID:                ev.WorldID,
 		Name:              ev.Name,

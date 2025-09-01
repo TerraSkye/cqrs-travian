@@ -2,6 +2,7 @@ package world_listing
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	cqrs "github.com/terraskye/eventsourcing"
 )
@@ -16,15 +17,14 @@ func NewQueryHandler(store cqrs.EventStore) cqrs.GenericQueryHandler[Query, Read
 
 func (q *QueryHandler) HandleQuery(ctx context.Context, _ Query) (ReadModel, error) {
 
-	events, err := q.store.LoadFrom(ctx, uuid.Nil.String(), 0)
+	events, err := q.store.LoadFromAll(ctx, 0)
 
 	if err != nil {
 		return ReadModel{}, err
 	}
 
 	model := ReadModel{
-		Version: "0",
-		Items:   make(map[uuid.UUID]*WorldListing),
+		Items: make(map[uuid.UUID]*WorldListing),
 	}
 
 	hydrate := cqrs.Hydrate(

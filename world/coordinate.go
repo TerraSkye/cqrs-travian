@@ -11,7 +11,7 @@ type Coordinate struct {
 	coordinate
 }
 
-func (c *Coordinate) DebugString() string {
+func (c *Coordinate) String() string {
 	return fmt.Sprintf("(%d|%d)", c.coordinate.x, c.coordinate.y)
 }
 
@@ -21,11 +21,11 @@ type coordinate struct {
 	y    int
 }
 
-func NewCoordinate(size int, x int, y int) (*Coordinate, error) {
+func NewCoordinate(size int, x int, y int) (Coordinate, error) {
 	if size%2 == 0 {
-		return nil, InvalidSize
+		return Coordinate{}, InvalidSize
 	}
-	c := &Coordinate{
+	c := Coordinate{
 		coordinate{
 			size: size,
 			x:    abs(size, x),

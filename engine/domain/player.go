@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"cqrs-travian/world/support"
+	"cqrs-travian/engine/support"
 	cqrs "github.com/terraskye/eventsourcing"
 )
 

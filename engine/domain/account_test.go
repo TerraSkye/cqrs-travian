@@ -1,10 +1,11 @@
-package domain
+package domain_test
 
 import (
 	"context"
-	"cqrs-travian/world"
-	"cqrs-travian/world/domain/commands"
-	"cqrs-travian/world/events"
+	"cqrs-travian/engine"
+	"cqrs-travian/engine/domain/commands"
+	"cqrs-travian/engine/events"
+	_ "cqrs-travian/engine/handlers"
 	"github.com/google/uuid"
 	cqrs "github.com/terraskye/eventsourcing"
 	"testing"
@@ -36,7 +37,7 @@ func TestAccount_CreateUserAccount(t *testing.T) {
 		{
 			name: "duplicate registration",
 			history: []cqrs.Event{
-				events.UserAccountCreatedEvent{
+				&events.UserAccountCreatedEvent{
 					WorldID:  world1,
 					Username: "test",
 					Email:    "test@example.org",
@@ -49,26 +50,24 @@ func TestAccount_CreateUserAccount(t *testing.T) {
 				Email:    "test@example.org",
 				Password: "test123",
 			},
-			wantErr:        true,
-			expectedEvents: nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			aggregate, err := world.AggregateForCommand(tt.command)
+			aggregate, err := engine.AggregateForCommand(tt.command)
 
 			if err != nil {
 				t.Errorf("expected an aggregate but got: %v", err)
 			}
 
 			for _, event := range tt.history {
-				if err := world.DispatchEvent(aggregate, event); err != nil {
+				if err := engine.DispatchEvent(aggregate, event); err != nil {
 					t.Errorf("failed to appy event `%v` onto aggregate %v, got err %v", aggregate, event, err)
 				}
 			}
 
-			if err := world.DispatchCommand(context.Background(), aggregate, tt.command); (err != nil) != tt.wantErr {
+			if err := engine.DispatchCommand(context.Background(), aggregate, tt.command); (err != nil) != tt.wantErr {
 				t.Errorf("CreateUserAccount() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

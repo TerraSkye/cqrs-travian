@@ -4,78 +4,84 @@ import (
 	"math/rand"
 )
 
-//generate a world for a given seed and size
-func generateWorld(seed int64, size int) map[int]Tile {
-	rand.Seed(seed)
+type tileFactory func() Tile
 
+// weightedTile stores the number of times this tile should occur relative to others.
+type weightedTile struct {
+	weight  int
+	factory tileFactory
+}
+
+func generateWorld(seed int64, size int) map[Coordinate]Tile {
+	seeded := rand.New(rand.NewSource(seed))
 	quadrant := size / 2
 
-	var tiles = make(map[int]Tile, 0)
+	tiles := make(map[Coordinate]Tile, (quadrant*2+1)*(quadrant*2+1))
 
+	// Define weights for each tile type
+	weightedTiles := []weightedTile{
+		// -------------------------------------------------------------------------
+		// VILLAGES — Layouts (wood-clay-iron-crop)
+		// -------------------------------------------------------------------------
+		{10, func() Tile { return NewVillage(1, uint64(seeded.Intn(9)+1)) }},  // 3-3-3-9
+		{80, func() Tile { return NewVillage(2, uint64(seeded.Intn(9)+1)) }},  // 3-4-5-6
+		{310, func() Tile { return NewVillage(3, uint64(seeded.Intn(9)+1)) }}, // 4-4-4-6
+		{80, func() Tile { return NewVillage(4, uint64(seeded.Intn(9)+1)) }},  // 4-5-3-6
+		{80, func() Tile { return NewVillage(5, uint64(seeded.Intn(9)+1)) }},  // 5-3-4-6
+		{10, func() Tile { return NewVillage(6, uint64(seeded.Intn(9)+1)) }},  // 1-1-1-15
+		{30, func() Tile { return NewVillage(7, uint64(seeded.Intn(9)+1)) }},  // 4-4-3-7
+		{30, func() Tile { return NewVillage(8, uint64(seeded.Intn(9)+1)) }},  // 3-4-4-7
+		{30, func() Tile { return NewVillage(9, uint64(seeded.Intn(9)+1)) }},  // 4-3-4-7
+		{80, func() Tile { return NewVillage(10, uint64(seeded.Intn(9)+1)) }}, // 3-5-4-6
+		{80, func() Tile { return NewVillage(11, uint64(seeded.Intn(9)+1)) }}, // 4-3-5-6
+		{80, func() Tile { return NewVillage(12, uint64(seeded.Intn(9)+1)) }}, // 5-4-3-6
+
+		// -------------------------------------------------------------------------
+		// OASES — Boost descriptions
+		// -------------------------------------------------------------------------
+		{8, func() Tile { return NewOasis(1) }},  // +25% wood
+		{8, func() Tile { return NewOasis(2) }},  // +25% wood
+		{8, func() Tile { return NewOasis(3) }},  // +25% wood, +25% crop
+		{8, func() Tile { return NewOasis(4) }},  // +25% clay
+		{8, func() Tile { return NewOasis(5) }},  // +25% clay
+		{8, func() Tile { return NewOasis(6) }},  // +25% clay, +25% crop
+		{8, func() Tile { return NewOasis(7) }},  // +25% iron
+		{8, func() Tile { return NewOasis(8) }},  // +25% iron
+		{8, func() Tile { return NewOasis(9) }},  // +25% iron, +25% crop
+		{8, func() Tile { return NewOasis(10) }}, // +25% crop
+		{8, func() Tile { return NewOasis(11) }}, // +25% crop
+		{8, func() Tile { return NewOasis(12) }}, // +25% crop, +25% crop
+	}
+
+	// Compute total weight for normalization
+	totalWeight := 0
+	for _, wt := range weightedTiles {
+		totalWeight += wt.weight
+	}
+
+	// Generate map tiles
 	for x := -quadrant; x <= quadrant; x++ {
 		for y := -quadrant; y <= quadrant; y++ {
-			coordinate, err := NewCoordinate(size, x, y)
+			coord, err := NewCoordinate(size, x, y)
 			if err != nil {
-				panic(err)
+				continue // skip invalid coords
 			}
-			var atile Tile
-			if x == size || x == 0 || y == size || y == 0 {
-				atile = NewEmptyTile(coordinate, 3, rand.Intn(9) +1)
+
+			var tile Tile
+			if x == quadrant || x == -quadrant || y == quadrant || y == -quadrant {
+				tile = NewVillage(3, uint64(seeded.Intn(9)+1)) // Border always type 3 village
 			} else {
-				random := rand.Intn(1000)
-
-				if random <= 10 {
-					atile = NewEmptyTile(coordinate, 1, rand.Intn(9) +1)
-				} else if random <= 90 {
-					atile = NewEmptyTile(coordinate, 2, rand.Intn(9) +1)
-				} else if random <= 400 {
-					atile = NewEmptyTile(coordinate, 3, rand.Intn(9) +1)
-				} else if random <= 480 {
-					atile = NewEmptyTile(coordinate, 4, rand.Intn(9) +1)
-				} else if random <= 560 {
-					atile = NewEmptyTile(coordinate, 5, rand.Intn(9) +1)
-				} else if random <= 570 {
-					atile = NewEmptyTile(coordinate, 6, rand.Intn(9) +1)
-				} else if random <= 600 {
-					atile = NewEmptyTile(coordinate, 7, rand.Intn(9) +1)
-				} else if random <= 630 {
-					atile = NewEmptyTile(coordinate, 8, rand.Intn(9) +1)
-				} else if random <= 660 {
-					atile = NewEmptyTile(coordinate, 9, rand.Intn(9) +1)
-				} else if random <= 740 {
-					atile = NewEmptyTile(coordinate, 10, rand.Intn(9) +1)
-				} else if random <= 820 {
-					atile = NewEmptyTile(coordinate, 11, rand.Intn(9) +1)
-				} else if random <= 900 {
-					atile = NewEmptyTile(coordinate, 12, rand.Intn(9) +1)
-				} else if random <= 908 {
-					atile = NewOasisTile(coordinate, 1, rand.Intn(9) +1)
-				} else if random <= 916 {
-					atile = NewOasisTile(coordinate, 2, rand.Intn(9) +1)
-				} else if random <= 924 {
-					atile = NewOasisTile(coordinate, 3, rand.Intn(9) +1)
-				} else if random <= 932 {
-					atile = NewOasisTile(coordinate, 4, rand.Intn(9) +1)
-				} else if random <= 940 {
-					atile = NewOasisTile(coordinate, 5, rand.Intn(9) +1)
-				} else if random <= 948 {
-					atile = NewOasisTile(coordinate, 6, rand.Intn(9) +1)
-				} else if random <= 956 {
-					atile = NewOasisTile(coordinate, 7, rand.Intn(9) +1)
-				} else if random <= 964 {
-					atile = NewOasisTile(coordinate, 8, rand.Intn(9) +1)
-				} else if random <= 972 {
-					atile = NewOasisTile(coordinate, 9, rand.Intn(9) +1)
-				} else if random <= 980 {
-					atile = NewOasisTile(coordinate, 10, rand.Intn(9) +1)
-				} else if random <= 988 {
-					atile = NewOasisTile(coordinate, 11, rand.Intn(9) +1)
-				} else if random <= 1000 {
-					atile = NewOasisTile(coordinate, 12, rand.Intn(9) +1)
+				roll := seeded.Intn(totalWeight)
+				for _, wt := range weightedTiles {
+					if roll < wt.weight {
+						tile = wt.factory()
+						break
+					}
+					roll -= wt.weight
 				}
-
 			}
-			tiles[coordinate.Id()] = atile
+
+			tiles[coord] = tile
 		}
 	}
 

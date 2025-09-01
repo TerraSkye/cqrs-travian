@@ -2,8 +2,8 @@ package domain
 
 import (
 	"context"
-	"cqrs-travian/world/domain/commands"
-	"cqrs-travian/world/events"
+	"cqrs-travian/engine/domain/commands"
+	"cqrs-travian/engine/events"
 	"fmt"
 	"github.com/google/uuid"
 	cqrs "github.com/terraskye/eventsourcing"
@@ -37,10 +37,10 @@ func (a *Account) CreateUserAccount(ctx context.Context, cmd *commands.CreateUse
 	return nil
 }
 
-func (a *Account) OnUserAccountCreated(ctx context.Context, ev *events.UserAccountCreatedEvent) {
+func (a *Account) OnUserAccountCreated(ev *events.UserAccountCreatedEvent) {
 	a.registered = true
 }
 
-func (a *Account) UserAccountVerificationToken(ctx context.Context, ev *events.UserAccountVerificationTokenCreated) {
+func (a *Account) UserAccountVerificationToken(ev *events.UserAccountVerificationTokenCreated) {
 	a.token = ev.Token
 }
