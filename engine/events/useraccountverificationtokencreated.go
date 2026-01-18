@@ -2,16 +2,28 @@ package events
 
 import (
 	"fmt"
+
 	"github.com/google/uuid"
+	cqrs "github.com/terraskye/eventsourcing"
 )
 
-type UserAccountVerificationTokenCreated struct {
+var _ cqrs.Event = (*UserAccountVerificationTokenCreatedEvent)(nil)
+
+func init() {
+	cqrs.RegisterEvent(&UserAccountVerificationTokenCreatedEvent{})
+}
+
+type UserAccountVerificationTokenCreatedEvent struct {
 	WorldID  uuid.UUID
 	Username string
 	Email    string
 	Token    string
 }
 
-func (w UserAccountVerificationTokenCreated) AggregateID() string {
-	return fmt.Sprintf("%s-%s", w.WorldID.String(), w.Username)
+func (e UserAccountVerificationTokenCreatedEvent) EventType() string {
+	return cqrs.TypeName(e)
+}
+
+func (e UserAccountVerificationTokenCreatedEvent) AggregateID() string {
+	return fmt.Sprintf("%s-%s", e.WorldID.String(), e.Username)
 }

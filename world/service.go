@@ -63,8 +63,8 @@ func (t *world) ViewCluster(centeredAt Coordinate, zoom int) (map[int]map[int]Ti
 	for x := centeredAt.x - (zoom / 2); x < centeredAt.x+(zoom/2)+1; x++ {
 		tiles[abs(t.size, x)] = make(map[int]Tile, 0)
 		for y := centeredAt.y - (zoom / 2); y < centeredAt.y+(zoom/2)+1; y++ {
-			coordinate, _ := NewCoordinate(t.size, x, y)
-			tiles[coordinate.X()][coordinate.Y()] = t.world[coordinate]
+			pos, _ := NewCoordinate(t.size, x, y)
+			tiles[pos.X()][pos.Y()] = t.world[pos]
 		}
 	}
 	return tiles, nil
